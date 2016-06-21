@@ -9,7 +9,7 @@ namespace WMS.Model
 {
     public class User:IDataObject
     {
-        private const String c_insert = "insert into user values(null,'@AccountNumber','@Password','@UserName','@EnrollDate',@UserType,@CreateId,@Enable)";
+        private const String c_insert = "insert into user values(null,@AccountNumber,@Password,@UserName,@EnrollDate,@UserType,@CreateId,@Enable)";
         private const String c_update = "";
         private const String c_delete = "";
 

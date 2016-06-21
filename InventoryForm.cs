@@ -106,7 +106,7 @@ namespace WMS
         {
             if (lv_Material.SelectedItems != null)
             {
-                this.dg_Inventory.DataSource = _sqlite_helper.Query_DataView("select goodsName as 名称,price as '价格(元/公斤)',weight as '重量(公斤)',settleMonth as 结算月份,calculateDate as 计算日期,status as 状态 from inventory,goods where goods.id=inventory.goodsId and goodsName='@GoodsName'",
+                this.dg_Inventory.DataSource = _sqlite_helper.Query_DataView("select goodsName as 名称,price as '价格(元/公斤)',weight as '重量(公斤)',settleMonth as 结算月份,calculateDate as 计算日期,status as 状态 from inventory,goods where goods.id=inventory.goodsId and goodsName=@GoodsName",
                     new System.Data.SQLite.SQLiteParameter("@GoodsName", lv_Material.SelectedItems[0].Text));
                 if (lv_Intermediate.SelectedItems.Count != 0)
                 {
@@ -163,7 +163,7 @@ namespace WMS
         {
             if (lv_Intermediate.SelectedItems != null)
             {
-                this.dg_Inventory.DataSource = _sqlite_helper.Query_DataView("select goodsName as 名称,price as '价格(元/公斤)',weight as '重量(公斤)',settleMonth as 结算月份,calculateDate as 计算日期,status as 状态 from inventory,goods where goods.id=inventory.goodsId and goodsName='@GoodsName'",
+                this.dg_Inventory.DataSource = _sqlite_helper.Query_DataView("select goodsName as 名称,price as '价格(元/公斤)',weight as '重量(公斤)',settleMonth as 结算月份,calculateDate as 计算日期,status as 状态 from inventory,goods where goods.id=inventory.goodsId and goodsName=@GoodsName",
                     new System.Data.SQLite.SQLiteParameter("@GoodsName", lv_Intermediate.SelectedItems[0].Text));
                 SetContent(lv_Intermediate.SelectedItems[0].Text);
             }

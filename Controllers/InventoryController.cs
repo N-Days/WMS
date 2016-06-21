@@ -264,8 +264,10 @@ namespace WMS.Controllers
 
             foreach (var inventory_current in inventorys_current)
             {
+                inventory_current.Status = Status.settled;
+                commands.Add(inventory_current.ToUpdate());
                 var inventory_next = inventorys_next.FirstOrDefault();
-                if (inventorys_next == null)
+                if (inventory_next == null)
                 {
                     commands.Add(new Inventory
                     {
@@ -282,7 +284,7 @@ namespace WMS.Controllers
             commands.Add(_operation_controller.GetOperationCommand(user, OperationController.Action.SettleInventory, "结算" + currentmonth + "库存"));
             try
             {
-                commands.ForEach(i => _sqlite_helper.Execute(i));
+                _sqlite_helper.Execute(commands);
                 return true;
             }
             catch (Exception e)
@@ -329,8 +331,6 @@ namespace WMS.Controllers
 
                     if (inventory_running == null)
                     {
-                        if (inventory_running.Status.Equals(Status.locked))
-                            continue;
                         //若不存在当前库存，则初始化库存记录
                         inventory_running = new Inventory
                         {
@@ -344,9 +344,12 @@ namespace WMS.Controllers
                     }
                     else
                     {
+                        if (inventory_running.Status.Equals(Status.locked))
+                            continue;
                         //若存在当前库存，则归零价格及重量
                         inventory_running.Price = 0.0;
                         inventory_running.Weight = 0.0;
+                        inventory_running.CalculateDate = DateTime.Now;
                     }
                     #endregion
                 }
@@ -373,6 +376,7 @@ namespace WMS.Controllers
                         //若存在当前库存，则归零价格及重量
                         inventory_running.Price = inventory_settle.Price * inventory_settle.Weight;
                         inventory_running.Weight = inventory_settle.Weight;
+                        inventory_running.CalculateDate = DateTime.Now;
                     }
                     #endregion
                 }
@@ -384,7 +388,8 @@ namespace WMS.Controllers
                     inventory_running.Price += inventoryio.Weight * inventoryio.Price;
                 }
                 //计算最新库存价格
-                inventory_running.Price = inventory_running.Price / inventory_running.Weight;
+                if (inventory_running.Weight != 0)
+                    inventory_running.Price = inventory_running.Price / inventory_running.Weight;
                 foreach (var inventoryio in inventoryios_current.Where(i => i.Weight < 0))
                 {
                     inventory_running.Weight += inventoryio.Weight;
@@ -400,7 +405,7 @@ namespace WMS.Controllers
 
             try
             {
-                commands.ForEach(c => _sqlite_helper.Execute(c));
+                _sqlite_helper.Execute(commands);
                 _operation_controller.RecordOperation(user, OperationController.Action.CalculateInventory, "计算月份:" + currentmonth);
                 return true;
             }
@@ -438,7 +443,7 @@ namespace WMS.Controllers
         /// <returns></returns>
         public IEnumerable<Inventory> GetInventoryBySettleMonth(string settlemonth)
         {
-            return GetInventory(_sqlite_helper.Query_DataView("select * from inventory where settleMonth='@SettleMonth'",
+            return GetInventory(_sqlite_helper.Query_DataView("select * from inventory where settleMonth=@SettleMonth",
                 new SQLiteParameter("@SettleMonth", settlemonth)));
         }
 
@@ -458,7 +463,7 @@ namespace WMS.Controllers
         /// <returns></returns>
         private IEnumerable<Inventory> GetInventory(DataView dv)
         {
-            foreach (DataRow drv in dv)
+            foreach (DataRowView drv in dv)
             {
                 yield return new Inventory
                 {
@@ -481,7 +486,7 @@ namespace WMS.Controllers
         /// <returns></returns>
         public Inventory GetGoodsInventory(int goodsId, string settleMonth)
         {
-            using (var dv = _sqlite_helper.Query_DataView("select * from inventory where goodsId=@GoodsID and settleMonth='@SettleMonth'",
+            using (var dv = _sqlite_helper.Query_DataView("select * from inventory where goodsId=@GoodsID and settleMonth=@SettleMonth",
                 new[] {
                     new SQLiteParameter("@GoodsID",goodsId),
                     new SQLiteParameter("@SettleMonth",settleMonth),
@@ -502,12 +507,12 @@ namespace WMS.Controllers
             DataView dv = null;
             if (string.IsNullOrEmpty(settleMonth))
             {
-                dv = _sqlite_helper.Query_DataView("select * from inventory,goods where goods.id=inventory.goodsId and goodsName='@GoodsName' order by settleMonth desc",
+                dv = _sqlite_helper.Query_DataView("select * from inventory,goods where goods.id=inventory.goodsId and goodsName=@GoodsName order by settleMonth desc",
                     new SQLiteParameter("@GoodsName", goodsName));
             }
             else
             {
-                dv = _sqlite_helper.Query_DataView("select * from inventory,goods where goods.id=inventory.goodsId and goodsName='@GoodsName' and settleMonth='@SettleMonth'",
+                dv = _sqlite_helper.Query_DataView("select * from inventory,goods where goods.id=inventory.goodsId and goodsName=@GoodsName and settleMonth=@SettleMonth",
                     new[]
                     {
                         new SQLiteParameter("@GoodsName",goodsName),
@@ -601,7 +606,7 @@ namespace WMS.Controllers
         /// <returns></returns>
         public double TotalAmount_Inventory(string settleMonth)
         {
-            var inventory_list = GetInventory(_sqlite_helper.Query_DataView("select * from inventory where settleMonth='@SettleMonth'",
+            var inventory_list = GetInventory(_sqlite_helper.Query_DataView("select * from inventory where settleMonth=@SettleMonth",
                 new SQLiteParameter("@SettleMonth", settleMonth)));
             double totalamount = 0;
             foreach (var inventory in inventory_list)
