@@ -19,13 +19,13 @@ namespace WMS
             InitializeComponent();
             switch (goodsType)
             {
-                case Controllers.GoodsController.GoodsType.material:
+                case GoodsController.GoodsType.material:
                     {
                         this.Text += "-原材料";
                         break;
                     }
 
-                case Controllers.GoodsController.GoodsType.intermediate:
+                case GoodsController.GoodsType.intermediate:
                     {
                         this.Text += "-半成品";
                         break;
@@ -53,7 +53,7 @@ namespace WMS
         private InventoryController inventorycontroller = new InventoryController();
         private TimeController timecontroller = new TimeController();
 
-        private Model.Inventory _getinventory(int goodsId)
+        private Inventory _getinventory(int goodsId)
         {
             if (dictionary_inventory.Keys.Contains(goodsId))
                 return dictionary_inventory[goodsId];
@@ -105,7 +105,7 @@ namespace WMS
                 this.cbx_GoodsName.Items.Add(goods.GoodsName);
             }
 
-            list_settleMonth = (List<String>)timecontroller.GetAllSettleMonth(true);
+            list_settleMonth = timecontroller.GetAllSettleMonth(true).ToList();
         }
 
         private void InitDataGird()
@@ -117,7 +117,7 @@ namespace WMS
                 _addinventory(inventory);
             }
 
-            list_inventory_io = (List<Inventory_IO>)inventory_io_controller.GetGoodsIOBySettleMonth(this.date_settleMonth.Text);
+            list_inventory_io = inventory_io_controller.GetGoodsIOBySettleMonth(this.date_settleMonth.Text).ToList();
             dt_inventory_io.Rows.Clear();
             var list_datarow = from inventoryio in list_inventory_io
                                join goods in dictionary_goods.Values
@@ -191,7 +191,7 @@ namespace WMS
 
         private bool InsertInventoryIO(string goodsname, double weight, double price)
         {
-            Model.Inventory_IO inventory_io = new Inventory_IO();
+            var inventory_io = new Inventory_IO();
             inventory_io.Price = price;
             inventory_io.Weight = weight;
             inventory_io.UserID = this._currentuser.Id;
