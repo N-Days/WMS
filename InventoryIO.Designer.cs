@@ -35,8 +35,8 @@
             this.删除ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.date_settleMonth = new System.Windows.Forms.DateTimePicker();
             this.cbx_GoodsName = new System.Windows.Forms.ComboBox();
-            this.btn_Next = new System.Windows.Forms.Button();
-            this.btn_Last = new System.Windows.Forms.Button();
+            this.btn_In = new System.Windows.Forms.Button();
+            this.btn_Out = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
@@ -64,8 +64,8 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.cbx_GoodsName);
-            this.splitContainer1.Panel2.Controls.Add(this.btn_Next);
-            this.splitContainer1.Panel2.Controls.Add(this.btn_Last);
+            this.splitContainer1.Panel2.Controls.Add(this.btn_In);
+            this.splitContainer1.Panel2.Controls.Add(this.btn_Out);
             this.splitContainer1.Panel2.Controls.Add(this.label4);
             this.splitContainer1.Panel2.Controls.Add(this.label3);
             this.splitContainer1.Panel2.Controls.Add(this.label1);
@@ -131,27 +131,27 @@
             this.cbx_GoodsName.TabIndex = 0;
             this.cbx_GoodsName.Tag = "";
             // 
-            // btn_Next
+            // btn_In
             // 
-            this.btn_Next.BackColor = System.Drawing.Color.IndianRed;
-            this.btn_Next.Location = new System.Drawing.Point(19, 340);
-            this.btn_Next.Name = "btn_Next";
-            this.btn_Next.Size = new System.Drawing.Size(134, 45);
-            this.btn_Next.TabIndex = 4;
-            this.btn_Next.Text = "入库";
-            this.btn_Next.UseVisualStyleBackColor = false;
-            this.btn_Next.Click += new System.EventHandler(this.btn_Next_Click);
+            this.btn_In.BackColor = System.Drawing.Color.IndianRed;
+            this.btn_In.Location = new System.Drawing.Point(19, 340);
+            this.btn_In.Name = "btn_In";
+            this.btn_In.Size = new System.Drawing.Size(134, 45);
+            this.btn_In.TabIndex = 4;
+            this.btn_In.Text = "入库";
+            this.btn_In.UseVisualStyleBackColor = false;
+            this.btn_In.Click += new System.EventHandler(this.btn_In_Click);
             // 
-            // btn_Last
+            // btn_Out
             // 
-            this.btn_Last.BackColor = System.Drawing.Color.LightSeaGreen;
-            this.btn_Last.Location = new System.Drawing.Point(19, 288);
-            this.btn_Last.Name = "btn_Last";
-            this.btn_Last.Size = new System.Drawing.Size(134, 45);
-            this.btn_Last.TabIndex = 3;
-            this.btn_Last.Text = "出库";
-            this.btn_Last.UseVisualStyleBackColor = false;
-            this.btn_Last.Click += new System.EventHandler(this.btn_Last_Click);
+            this.btn_Out.BackColor = System.Drawing.Color.LightSeaGreen;
+            this.btn_Out.Location = new System.Drawing.Point(19, 288);
+            this.btn_Out.Name = "btn_Out";
+            this.btn_Out.Size = new System.Drawing.Size(134, 45);
+            this.btn_Out.TabIndex = 3;
+            this.btn_Out.Text = "出库";
+            this.btn_Out.UseVisualStyleBackColor = false;
+            this.btn_Out.Click += new System.EventHandler(btn_Out_Click);
             // 
             // label4
             // 
@@ -227,8 +227,8 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txt_Price;
         private System.Windows.Forms.TextBox txt_Weight;
-        private System.Windows.Forms.Button btn_Next;
-        private System.Windows.Forms.Button btn_Last;
+        private System.Windows.Forms.Button btn_In;
+        private System.Windows.Forms.Button btn_Out;
         private System.Windows.Forms.ComboBox cbx_GoodsName;
         private System.Windows.Forms.ContextMenuStrip menu_IO;
         private System.Windows.Forms.ToolStripMenuItem 删除ToolStripMenuItem;
