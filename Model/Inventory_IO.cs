@@ -9,7 +9,7 @@ namespace WMS.Model
 {
     class Inventory_IO:IDataObject
     {
-        private const String c_insert = "insert into inventoryIO values(null,@GoodsID,@Price,@Weight,'@RecordDate','@SettleMonth',@UserID)";
+        private const String c_insert = "insert into inventoryIO values(null,@GoodsID,@Price,@Weight,@RecordDate,@SettleMonth,@UserID)";
         private const String c_update = "update inventoryIO set goodsId=@GoodsID,price=@Price,weight=@Weight,recordDate=@RecordDate,settleMonth=@SettleMonth,userId=@UserID where id=@ID";
         private const String c_delete = "delete from inventoryIO where ID=@ID";
 

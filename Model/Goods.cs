@@ -95,7 +95,7 @@ namespace WMS.Model
 
         public SQLiteCommand ToInsert()
         {
-            var command = new SQLiteCommand("insert into goods values(null,'@GoodsName','@Color','@GoodsType','@RecordDate','@UserID')");
+            var command = new SQLiteCommand("insert into goods values(null,@GoodsName,@Color,@GoodsType,@RecordDate,@UserID)");
             command.Parameters.AddRange(new[]
             {
                 new SQLiteParameter("@ID", ID),
@@ -108,7 +108,7 @@ namespace WMS.Model
 
         public SQLiteCommand ToUpdate()
         {
-            var command = new SQLiteCommand("update goods set goodsName='@GoodsName', goodsType='@GoodsType',color='@Color',recordDate='@RecordDate',userId=@UserID where id=@ID");
+            var command = new SQLiteCommand("update goods set goodsName=@GoodsName, goodsType=@GoodsType,color=@Color,recordDate=@RecordDate,userId=@UserID where id=@ID");
             command.Parameters.AddRange(new[]
             {
                 new SQLiteParameter("@ID", ID),

@@ -28,7 +28,7 @@ namespace WMS.Controllers
 
         private IEnumerable<User> _getusers(DataView dv)
         {
-            foreach (DataRow dr in dv)
+            foreach (DataRowView dr in dv)
                 yield return new User
                 {
                     Id = Convert.ToInt32(dr["id"].ToString()),
@@ -59,14 +59,14 @@ namespace WMS.Controllers
 
                 default:
                     {
-                        return _getusers(_sqlite_helper.Query_DataView(new System.Data.SQLite.SQLiteCommand("select * from user where userType=@UserType")));
+                        return _getusers(_sqlite_helper.Query_DataView(new System.Data.SQLite.SQLiteCommand("select * from user")));
                     }
             }
         }
 
         public bool Insert(User currentuser, User newuser)
         {
-            DataView dv_User = _sqlite_helper.Query_DataView("select * from user where accountNumber='@AccountNumber' and userName='@UserName'",
+            DataView dv_User = _sqlite_helper.Query_DataView("select * from user where accountNumber=@AccountNumber and userName=@UserName",
                 new[]
                 {
                     new System.Data.SQLite.SQLiteParameter("@AccountNumber",newuser.AccountNumber),

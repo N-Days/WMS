@@ -55,7 +55,7 @@ namespace WMS.Helper
         {
             var command = new SQLiteCommand(sql)
             {
-                Connection= s_sqliteconnection,
+                Connection = s_sqliteconnection,
                 Parameters =
                 {
                     parameters
@@ -68,7 +68,7 @@ namespace WMS.Helper
         {
             var command = new SQLiteCommand(sql)
             {
-                Connection= s_sqliteconnection,
+                Connection = s_sqliteconnection,
                 Parameters =
                 {
                     parameter
@@ -82,14 +82,16 @@ namespace WMS.Helper
         public void BeginTransaction()
         {
             if (_sqlitetransaction == null)
+            {
+                s_databaselock.Enter(true);
                 _sqlitetransaction = s_sqliteconnection.BeginTransaction();
+            }
         }
 
         public void EndTransaction()
         {
             try
             {
-                s_databaselock.Enter(true);
                 _sqlitetransaction.Commit();
             }
             catch (Exception e)
@@ -120,6 +122,35 @@ namespace WMS.Helper
             }
         }
 
+        public int Execute(IEnumerable<SQLiteCommand> commands)
+        {
+            using (var trans = s_sqliteconnection.BeginTransaction())
+            {
+                try
+                {
+                    s_databaselock.Enter(true);
+                    int count = 0;
+                    foreach (var command in commands)
+                    {
+                        var cmd = _getcommand(command);
+                        cmd.Transaction = trans;
+                        count += cmd.ExecuteNonQuery();
+                    }
+                    trans.Commit();
+                    return count;
+                }
+                catch (Exception e)
+                {
+                    trans.Rollback();
+                    throw e;
+                }
+                finally
+                {
+                    s_databaselock.Leave();
+                }
+            }
+        }
+
         public int Execute(String sql, SQLiteParameter[] parameters)
         {
             using (var command = _getcommand(sql, parameters))
@@ -128,7 +159,7 @@ namespace WMS.Helper
             }
         }
 
-        public int Execute(String sql,SQLiteParameter parameter)
+        public int Execute(String sql, SQLiteParameter parameter)
         {
             using (var command = _getcommand(sql, parameter))
             {
@@ -162,7 +193,7 @@ namespace WMS.Helper
 
         public DataView Query_DataView(String sql, SQLiteParameter[] parameters)
         {
-            using (var command = _getcommand(sql,parameters))
+            using (var command = _getcommand(sql, parameters))
             {
                 return Query_DataView(command);
             }
@@ -170,7 +201,7 @@ namespace WMS.Helper
 
         public DataView Query_DataView(String sql, SQLiteParameter parameter)
         {
-            using (var command = _getcommand(sql,parameter))
+            using (var command = _getcommand(sql, parameter))
             {
                 return Query_DataView(command);
             }

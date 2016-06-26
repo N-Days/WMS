@@ -10,7 +10,7 @@ namespace WMS.Controllers
 {
     class OperationController
     {
-        private const String c_insert = "insert into user_operation values(null,'@UserID','@Operation','@Content','@OperaDate')";
+        private const String c_insert = "insert into user_operation values(null,@UserID,@Operation,@Content,@OperaDate)";
         private SqliteHelper _sqlite_helper
         {
             get;

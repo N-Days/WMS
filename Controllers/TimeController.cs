@@ -17,9 +17,9 @@ namespace WMS.Controllers
             set;
         }
 
-        private static SQLiteCommand command_settle = new SQLiteCommand("select distinct settleMonth from inventory order by settleMonth");
-        private static SQLiteCommand command_unsettle = new SQLiteCommand("select distinct settleMonth from inventory where status <> 'running' order by settleMonth");
-        private static SQLiteCommand command_default = new SQLiteCommand("select distinct settleMonth from inventory where status = 'running' order by settleMonth");
+        private const String c_default = "select distinct settleMonth from inventory order by settleMonth";
+        private const String c_settle = "select distinct settleMonth from inventory where status <> 'running' order by settleMonth";
+        private const String c_unsettle = "select distinct settleMonth from inventory where status = 'running' order by settleMonth";
 
         public TimeController()
         {
@@ -35,13 +35,13 @@ namespace WMS.Controllers
         {
             SQLiteCommand command;
             if (IsSettled == null)
-                command = command_default;
+                command = new SQLiteCommand(c_default);
             else if (IsSettled == true)
-                command = command_settle;
+                command = new SQLiteCommand(c_settle);
             else
-                command = command_unsettle;
+                command = new SQLiteCommand(c_unsettle);
 
-            using (command)
+
             using (var dv_Month = _sqlite_helper.Query_DataView(command))
             {
                 for (int i = 0; i < dv_Month.Count; i++)
@@ -89,9 +89,6 @@ namespace WMS.Controllers
 
         public void Dispose()
         {
-            command_settle.Dispose();
-            command_unsettle.Dispose();
-            command_default.Dispose();
         }
     }
 }

@@ -34,7 +34,7 @@ namespace WMS.Controllers
 
         private IEnumerable<Inventory_IO> GetGoodsIO(DataView dv)
         {
-            foreach (DataRow drv in dv)
+            foreach (DataRowView drv in dv)
             {
                 yield return new Inventory_IO
                 {
@@ -50,7 +50,7 @@ namespace WMS.Controllers
 
         public IEnumerable<Inventory_IO> GetGoodsIOBySettleMonth(string settlemonth)
         {
-            return GetGoodsIO(_sqlite_helper.Query_DataView("select * from inventoryIO where settleMonth='@SettleMonth'",
+            return GetGoodsIO(_sqlite_helper.Query_DataView("select * from inventoryIO where settleMonth=@SettleMonth",
                 new SQLiteParameter("@SettleMonth", settlemonth)));
         }
 
@@ -128,13 +128,13 @@ namespace WMS.Controllers
 
         public double TotalAmount_In(string settleMonth)
         {
-            return GetGoodsIO(_sqlite_helper.Query_DataView("select * from inventoryIO where weight>0 and settleMonth='@SettleMonth'",
+            return GetGoodsIO(_sqlite_helper.Query_DataView("select * from inventoryIO where weight>0 and settleMonth=@SettleMonth",
                 new SQLiteParameter("@SettleMonth",settleMonth))).Sum(i=>i.Price*i.Weight);
         }
 
         public double TotalAmount_Out(string settleMonth)
         {
-            return GetGoodsIO(_sqlite_helper.Query_DataView("select * from inventoryIO where weight<0 and settleMonth='@SettleMonth'",
+            return GetGoodsIO(_sqlite_helper.Query_DataView("select * from inventoryIO where weight<0 and settleMonth=@SettleMonth",
                 new SQLiteParameter("@SettleMonth", settleMonth))).Sum(i => i.Price * i.Weight);
         }
     }

@@ -92,7 +92,7 @@ namespace WMS.Controllers
 
         public Goods GetGoodsByGoodsName(string goodsName)
         {
-            var command = new SQLiteCommand("select * from goods where goodsName='@GoodsName'");
+            var command = new SQLiteCommand("select * from goods where goodsName=@GoodsName");
             command.Parameters.Add(new SQLiteParameter("@GoodsName", goodsName));
             using (command)
             using (var dv = _sqlite_helper.Query_DataView(command))
@@ -103,7 +103,7 @@ namespace WMS.Controllers
 
         public IEnumerable<Goods> GetGoodsByType(string goodsType)
         {
-            var command = new SQLiteCommand("select * from goods where goodsType='@GoodsType'");
+            var command = new SQLiteCommand("select * from goods where goodsType=@GoodsType");
             command.Parameters.Add(new SQLiteParameter("@GoodsType", goodsType));
             using (command)
                 return _getgoods(_sqlite_helper.Query_DataView(command));

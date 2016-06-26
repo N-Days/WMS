@@ -19,13 +19,13 @@ namespace WMS
             InitializeComponent();
             switch (goodsType)
             {
-                case Controllers.GoodsController.GoodsType.material:
+                case GoodsController.GoodsType.material:
                     {
                         this.Text += "-原材料";
                         break;
                     }
 
-                case Controllers.GoodsController.GoodsType.intermediate:
+                case GoodsController.GoodsType.intermediate:
                     {
                         this.Text += "-半成品";
                         break;
@@ -53,7 +53,7 @@ namespace WMS
         private InventoryController inventorycontroller = new InventoryController();
         private TimeController timecontroller = new TimeController();
 
-        private Model.Inventory _getinventory(int goodsId)
+        private Inventory _getinventory(int goodsId)
         {
             if (dictionary_inventory.Keys.Contains(goodsId))
                 return dictionary_inventory[goodsId];
@@ -105,7 +105,7 @@ namespace WMS
                 this.cbx_GoodsName.Items.Add(goods.GoodsName);
             }
 
-            list_settleMonth = (List<String>)timecontroller.GetAllSettleMonth(true);
+            list_settleMonth = timecontroller.GetAllSettleMonth(true).ToList();
         }
 
         private void InitDataGird()
@@ -117,7 +117,7 @@ namespace WMS
                 _addinventory(inventory);
             }
 
-            list_inventory_io = (List<Inventory_IO>)inventory_io_controller.GetGoodsIOBySettleMonth(this.date_settleMonth.Text);
+            list_inventory_io = inventory_io_controller.GetGoodsIOBySettleMonth(this.date_settleMonth.Text).ToList();
             dt_inventory_io.Rows.Clear();
             var list_datarow = from inventoryio in list_inventory_io
                                join goods in dictionary_goods.Values
@@ -177,11 +177,13 @@ namespace WMS
             string match_decimal = "^[-+]?[0-9]+(\\.[0-9]+)?$";
             if (!Regex.IsMatch(txt_Price.Text, match_decimal))
             {
+                MessageBox.Show("价格无法转换为有效数字");
                 txt_Price.Focus();
                 return false;
             }
             if (!Regex.IsMatch(txt_Weight.Text, match_decimal))
             {
+                MessageBox.Show("重量无法转换为有效数字");
                 txt_Weight.Focus();
                 return false;
             }
@@ -191,7 +193,7 @@ namespace WMS
 
         private bool InsertInventoryIO(string goodsname, double weight, double price)
         {
-            Model.Inventory_IO inventory_io = new Inventory_IO();
+            var inventory_io = new Inventory_IO();
             inventory_io.Price = price;
             inventory_io.Weight = weight;
             inventory_io.UserID = this._currentuser.Id;
@@ -276,8 +278,8 @@ namespace WMS
                 this.cbx_GoodsName.Enabled = false;
                 this.txt_Price.Enabled = false;
                 this.txt_Weight.Enabled = false;
-                this.btn_Last.Enabled = false;
-                this.btn_Next.Enabled = false;
+                this.btn_Out.Enabled = false;
+                this.btn_In.Enabled = false;
                 this.menu_IO.Enabled = false;
             }
             else
@@ -285,8 +287,8 @@ namespace WMS
                 this.cbx_GoodsName.Enabled = true;
                 this.txt_Price.Enabled = true;
                 this.txt_Weight.Enabled = true;
-                this.btn_Last.Enabled = true;
-                this.btn_Next.Enabled = true;
+                this.btn_Out.Enabled = true;
+                this.btn_In.Enabled = true;
                 this.menu_IO.Enabled = true;
             }
             InitDataGird();
@@ -298,7 +300,7 @@ namespace WMS
             f.ShowDialog();
         }
 
-        private void btn_Next_Click(object sender, EventArgs e)
+        private void btn_Out_Click(object sender, EventArgs e)
         {
             if (CheckContent())
             {
@@ -308,40 +310,10 @@ namespace WMS
                 double.TryParse(this.txt_Price.Text, out price);
                 if (weight * price != 0)
                 {
+                    if (weight > 0)
+                        weight = -weight;
                     if (InsertInventoryIO(this.cbx_GoodsName.Text, weight, price))
                     {
-                        int index = this.cbx_GoodsName.SelectedIndex + 1;
-                        if (index < this.cbx_GoodsName.Items.Count) this.cbx_GoodsName.SelectedIndex = index;
-                        else this.cbx_GoodsName.SelectedIndex = 0;
-
-                        ClearContent();
-                        InitDataGird();
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("数值不得为0");
-                }
-            }
-        }
-
-        private void btn_Last_Click(object sender, EventArgs e)
-        {
-            if (CheckContent())
-            {
-                double weight = 0;
-                double price = 0;
-                double.TryParse(this.txt_Weight.Text, out weight);
-                double.TryParse(this.txt_Price.Text, out price);
-                if (weight * price != 0)
-                {
-                    if (InsertInventoryIO(this.cbx_GoodsName.Text, weight, price))
-                    {
-
-                        int index = this.cbx_GoodsName.SelectedIndex - 1;
-                        if (index > 0) this.cbx_GoodsName.SelectedIndex = index;
-                        else this.cbx_GoodsName.SelectedIndex = this.cbx_GoodsName.Items.Count - 1;
-
                         ClearContent();
                         InitDataGird();
                     }
@@ -380,6 +352,31 @@ namespace WMS
             }
 
             InitDataGird();
+        }
+
+        private void btn_In_Click(object sender, EventArgs e)
+        {
+            if (CheckContent())
+            {
+                double weight = 0;
+                double price = 0;
+                double.TryParse(this.txt_Weight.Text, out weight);
+                double.TryParse(this.txt_Price.Text, out price);
+                if (weight * price != 0)
+                {
+                    if (weight < 0)
+                        weight = -weight;
+                    if (InsertInventoryIO(this.cbx_GoodsName.Text, weight, price))
+                    {
+                        ClearContent();
+                        InitDataGird();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("数值不得为0");
+                }
+            }
         }
     }
 }

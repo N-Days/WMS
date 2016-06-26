@@ -9,8 +9,8 @@ namespace WMS.Model
 {
     class Inventory:IDataObject
     {
-        private const String c_insert = "insert into inventory values(null,'@GoodsID',@Price,@Weight,'@SettleMonth','@CalculateDate','@Status')";
-        private const String c_update = "update inventory set price=@Price ,weight=@Weight ,calculateDate='@CalculateDate',status='@Status' where goodsId=@GoodsID and settleMonth='@SettleMonth'";
+        private const String c_insert = "insert into inventory values(null,@GoodsID,@Price,@Weight,@SettleMonth,@CalculateDate,@Status)";
+        private const String c_update = "update inventory set price=@Price ,weight=@Weight ,calculateDate=@CalculateDate,status=@Status,goodsId=@GoodsID,settleMonth=@SettleMonth where id=@ID";
         private const String c_delete = "delete from inventory where id=@ID";
 
         private int _id;
@@ -132,6 +132,7 @@ namespace WMS.Model
             {
                 Parameters=
                 {
+                    new SQLiteParameter("@ID", ID),
                     new SQLiteParameter("@GoodsID", GoodsID),
                     new SQLiteParameter("@Price", Price),
                     new SQLiteParameter("@Weight", Weight),

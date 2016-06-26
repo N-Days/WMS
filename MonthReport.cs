@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using WMS.Controllers;
+using WMS.Model;
 
 namespace WMS
 {
