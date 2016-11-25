@@ -6,16 +6,14 @@ using System.Data;
 using System.Data.SQLite;
 using WMS.Helper;
 using WMS.Model;
+using WMS.Common;
 
 namespace WMS.Controllers
 {
     class GoodsController : IDisposable
     {
-        private SqliteHelper _sqlite_helper
-        {
-            get;
-            set;
-        }
+        private SqliteHelper _sqlite_helper => GlobalParam.DataBase;
+
         private OperationController _operation_controller
         {
             get;
@@ -29,7 +27,6 @@ namespace WMS.Controllers
 
         private void _initData()
         {
-            _sqlite_helper = new SqliteHelper();
             _operation_controller = new OperationController();
         }
 
@@ -49,7 +46,7 @@ namespace WMS.Controllers
             }
         }
 
-        private bool _insert(Goods goods, Model.User user, ref string message)
+        private bool _insert(Goods goods, User user, ref string message)
         {
             using (var command = goods.ToInsert())
             {

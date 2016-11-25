@@ -22,7 +22,6 @@ namespace WMS
         private Model.User _currentuser = null;
         private DataTable dt_Goods = new DataTable();
 
-        private TimeController timecontroller = new TimeController();
         private GoodsController goodscontroller = new GoodsController();
         private InventoryController inventorycontroller = new InventoryController();
 
@@ -103,8 +102,8 @@ namespace WMS
             #endregion
 
             #region 库存状态检查
-            var settlemonth_last=timecontroller.GetLastSettleMonth();
-            var settlemonth_running=timecontroller.GetRunningMonth();
+            var settlemonth_last= TimeController.GetLastSettleMonth();
+            var settlemonth_running= TimeController.GetRunningMonth();
             if (string.IsNullOrEmpty(settlemonth_last))
             {
                 MessageBox.Show("未能找到已结算的月份,无法新增初始库存记录,请在'库存录入'窗口手动添加初始库存");
@@ -115,7 +114,7 @@ namespace WMS
                 MessageBox.Show("未能找到运行中的月份,无法新增初始库存记录,请在'库存录入'窗口手动添加初始库存");
                 return;
             }
-            if (!timecontroller.GetNextMonth(settlemonth_last).Equals(settlemonth_running))
+            if (!TimeController.GetNextMonth(settlemonth_last).Equals(settlemonth_running))
             {
                 MessageBox.Show("最后一个已结算的月份'" + settlemonth_last + "'与运行中的月份'" + settlemonth_running + "'存在间隔,无法通过计算检查");
                 return;
@@ -133,7 +132,7 @@ namespace WMS
                                          GoodsID=list_goods.FirstOrDefault(goods=>goods.GoodsName.Equals(dr["名称"].ToString().ToUpper())).ID,
                                          Price = Convert.ToDouble(dr["初始价格"].ToString()),
                                          Weight = Convert.ToDouble(dr["初始重量"].ToString()),
-                                         SettleMonth=timecontroller.GetLastSettleMonth(),
+                                         SettleMonth=TimeController.GetLastSettleMonth(),
                                          Status = Controllers.InventoryController.Status.locked,
                                          CalculateDate=DateTime.Now,
                                      },
@@ -142,7 +141,7 @@ namespace WMS
                                          GoodsID=list_goods.FirstOrDefault(goods=>goods.GoodsName.Equals(dr["名称"].ToString().ToUpper())).ID,
                                          Price = Convert.ToDouble(dr["初始价格"].ToString()),
                                          Weight = Convert.ToDouble(dr["初始重量"].ToString()),
-                                         SettleMonth=timecontroller.GetRunningMonth(),
+                                         SettleMonth=TimeController.GetRunningMonth(),
                                          Status = Controllers.InventoryController.Status.running,
                                          CalculateDate=DateTime.Now,
                                      }

@@ -6,8 +6,10 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Data.SQLite;
 using WMS.Controllers;
 using WMS.Model;
+using WMS.Common;
 
 namespace WMS
 {
@@ -18,22 +20,10 @@ namespace WMS
             InitializeComponent();
         }
 
-        private Model.User CurrentUser = null;
-
-        private Helper.SqliteHelper _sqlite_helper
-        {
-            get;
-            set;
-        }
-        private Controllers.TimeController timecontroller
-        {
-            get;
-            set;
-        }
+        private User CurrentUser = null;
 
         private void fMain_Load(object sender, EventArgs e)
         {
-            _initData();
             fLogin login = new fLogin();
             login.ShowDialog();
             if (login.DialogResult != DialogResult.OK)
@@ -76,28 +66,29 @@ namespace WMS
             this.Location = new Point((rec.Width - this.Width) / 2, (rec.Height - this.Height) / 2);
         }
 
-        private DataView dv_Intermediate = new DataView();
-        private DataView dv_Material = new DataView();
+        private const string c_query = "select goodsName as 名称,round(price,2) as '价格(元/公斤)',round(weight,2) as '重量(公斤)',settleMonth as 结算月份, (case status when 'settled' then '已结算' when 'running' then '运作中' when 'locked' then '已锁定' else '出错'  end) as 状态 from inventory,goods where goods.id=inventory.goodsId and goods.goodsType=@GoodsType and settleMonth = @SettleMonth";
+
+        private string _currentmonth => TimeController.GetRunningMonth();
+
+        private DataView dv_Intermediate => GlobalParam.DataBase.Query_DataView(c_query, new SQLiteParameter[]
+                                                                    {
+                                                                        new SQLiteParameter("@GoodsType","intermediate"),
+                                                                        new SQLiteParameter("@SettleMonth", _currentmonth)
+                                                                    });
+
+        private DataView dv_Material => GlobalParam.DataBase.Query_DataView(c_query, new SQLiteParameter[]
+                                                                    {
+                                                                        new SQLiteParameter("@GoodsType","material"),
+                                                                        new SQLiteParameter("@SettleMonth", _currentmonth)
+                                                                    });
 
         private void InitDataGird()
         {
-            dv_Material = _sqlite_helper.Query_DataView(new System.Data.SQLite.SQLiteCommand("select goodsName as 名称,price as '价格(元/公斤)',weight as '重量(公斤)',settleMonth as 结算月份, (case status when 'settled' then '已结算' when 'running' then '运作中' when 'locked' then '已锁定' else '出错'  end) as 状态 from inventory,goods where goods.id=inventory.goodsId and goods.goodsType='material' and settleMonth in (select distinct settleMonth from inventory order by settleMonth desc limit 1)"));
-            dv_Intermediate = _sqlite_helper.Query_DataView(new System.Data.SQLite.SQLiteCommand("select goodsName as 名称,price as '价格(元/公斤)',weight as '重量(公斤)',settleMonth as 结算月份, (case status when 'settled' then '已结算' when 'running' then '运作中' when 'locked' then '已锁定' else '出错'  end) as 状态 from inventory,goods where goods.id=inventory.goodsId and goods.goodsType='intermediate' and settleMonth in (select distinct settleMonth from inventory order by settleMonth desc limit 1)"));
             if (dv_Material != null)
-            {
                 this.dg_material.DataSource = dv_Material;
-            }
 
             if (dv_Intermediate != null)
-            {
                 this.dg_intermediate.DataSource = dv_Intermediate;
-            }
-        }
-
-        private void _initData()
-        {
-            _sqlite_helper = new Helper.SqliteHelper();
-            timecontroller = new TimeController();
         }
 
         private void fMain_SizeChanged(object sender, EventArgs e)
@@ -107,7 +98,7 @@ namespace WMS
 
         private void toolbtn_User_Click(object sender, EventArgs e)
         {
-            UserManage um = new UserManage(CurrentUser);
+            var um = new UserManage(CurrentUser);
             um.ShowDialog();
         }
 
@@ -160,10 +151,10 @@ namespace WMS
 
         private void 结算库存ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var settlemonth_running = timecontroller.GetRunningMonth();
+            var settlemonth_running = TimeController.GetRunningMonth();
             if (string.IsNullOrEmpty(settlemonth_running))
             {
-                settlemonth_running = timecontroller.GetNextMonth(timecontroller.GetAllSettleMonth(null).LastOrDefault());
+                settlemonth_running = TimeController.GetNextMonth(TimeController.GetAllSettleMonth(null).LastOrDefault());
             }
             if (MessageBox.Show("即将进行'" + settlemonth_running + "'的结算操作,是否继续?", "提示", MessageBoxButtons.OKCancel) == DialogResult.Cancel)
             {
@@ -206,7 +197,7 @@ namespace WMS
         {
             System.IO.FileStream fs1 = System.IO.File.Open(@"半成品库存情况.txt", System.IO.FileMode.Append, System.IO.FileAccess.Write);
             System.IO.StreamWriter sw1 = new System.IO.StreamWriter(fs1);
-            var dv_Material = _sqlite_helper.Query_DataView(new System.Data.SQLite.SQLiteCommand("select goodsName,weight from inventory,goods where goods.id=inventory.goodsId and settleMonth='2015-12' and goods.goodsType='intermediate'"));
+            var dv_Material = GlobalParam.DataBase.Query_DataView(new System.Data.SQLite.SQLiteCommand("select goodsName,weight from inventory,goods where goods.id=inventory.goodsId and settleMonth='2015-12' and goods.goodsType='intermediate'"));
             for (int i = 0; i < dv_Material.Count; i++)
             {
                 sw1.WriteLine(dv_Material[i]["goodsName"].ToString() + "        " + dv_Material[i]["weight"].ToString());

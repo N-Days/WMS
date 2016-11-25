@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Data;
 using WMS.Helper;
+using WMS.Common;
 using WMS.Model;
 using System.Data.SQLite;
 
@@ -11,17 +12,8 @@ namespace WMS.Controllers
 {
     class InventoryController
     {
-        private SqliteHelper _sqlite_helper
-        {
-            get;
-            set;
-        }
+        private SqliteHelper _sqlite_helper => GlobalParam.DataBase;
         private OperationController _operation_controller
-        {
-            get;
-            set;
-        }
-        private TimeController timecontroller
         {
             get;
             set;
@@ -41,9 +33,7 @@ namespace WMS.Controllers
 
         private void _initData()
         {
-            _sqlite_helper = new SqliteHelper();
             _operation_controller = new OperationController();
-            timecontroller = new TimeController();
             _goods_controller = new GoodsController();
             _inventoryio_controller = new Inventory_IO_Controller();
         }
@@ -84,7 +74,6 @@ namespace WMS.Controllers
 
         private bool _update(Inventory goods_inventory, User user, ref string message)
         {
-            goods_inventory.Status = Status.locked;
             try
             {
                 _sqlite_helper.Execute(goods_inventory.ToUpdate());
@@ -128,8 +117,8 @@ namespace WMS.Controllers
         /// <returns></returns>
         private bool _checkrunningmonth(User user, ref string message)
         {
-            var settlemonth_last = timecontroller.GetLastSettleMonth();
-            var settlemonth_running = timecontroller.GetRunningMonth();
+            var settlemonth_last = TimeController.GetLastSettleMonth();
+            var settlemonth_running = TimeController.GetRunningMonth();
 
             var list_goods = new GoodsController().GetAllGoods();
             var commands = new List<SQLiteCommand>();
@@ -139,7 +128,7 @@ namespace WMS.Controllers
             if (string.IsNullOrEmpty(settlemonth_running))
             {
                 #region 若不存在运行中月份
-                settlemonth_running = timecontroller.GetNextMonth(settlemonth_last);
+                settlemonth_running = TimeController.GetNextMonth(settlemonth_last);
                 using (var delete = new SQLiteCommand("delete from inventory where status='running'"))
                 {
                     _sqlite_helper.Execute(delete);
@@ -203,7 +192,7 @@ namespace WMS.Controllers
             else
             {
                 #region 若存在运行中月份
-                if (!timecontroller.GetNextMonth(settlemonth_last).Equals(settlemonth_running))
+                if (!TimeController.GetNextMonth(settlemonth_last).Equals(settlemonth_running))
                 {
                     message += "最后一个已结算的月份'" + settlemonth_last + "'与运行中的月份'" + settlemonth_running + "'存在间隔,无法通过计算检查";
                     return false;
@@ -250,25 +239,30 @@ namespace WMS.Controllers
         /// <returns></returns>
         private bool _settleRunningMonth(User user, ref string message)
         {
-            var currentmonth = timecontroller.GetRunningMonth();
+            var currentmonth = TimeController.GetRunningMonth();
             if (string.IsNullOrEmpty(currentmonth))
             {
                 message += "未能找到正确的运行中月份,无法计算";
                 return false;
             }
-            var nextmonth = timecontroller.GetNextMonth(currentmonth);
+            var nextmonth = TimeController.GetNextMonth(currentmonth);
 
             var inventorys_current = GetInventoryBySettleMonth(currentmonth);
             var inventorys_next = GetInventoryBySettleMonth(nextmonth);
             var commands = new List<SQLiteCommand>();
 
-            foreach (var inventory_current in inventorys_current)
+            //当没找到下月库存记录时，就不需要逐个货物查找是否存在下月记录了
+            if (inventorys_next == null || inventorys_next.Count() == 0)
             {
-                inventory_current.Status = Status.settled;
-                commands.Add(inventory_current.ToUpdate());
-                var inventory_next = inventorys_next.FirstOrDefault();
-                if (inventory_next == null)
+                foreach (var inventory_current in inventorys_current)
                 {
+                    //只有当库存记录正在运行中，才修改库存状态
+                    if (inventory_current.Status == Status.running)
+                    {
+                        inventory_current.Status = Status.settled;
+                        inventory_current.CalculateDate = DateTime.Now;
+                        commands.Add(inventory_current.ToUpdate());
+                    }
                     commands.Add(new Inventory
                     {
                         GoodsID = inventory_current.GoodsID,
@@ -280,7 +274,33 @@ namespace WMS.Controllers
                     }.ToInsert());
                 }
             }
-
+            else
+            {
+                foreach (var inventory_current in inventorys_current)
+                {
+                    //只有当库存记录正在运行中，才修改库存状态
+                    if (inventory_current.Status == Status.running)
+                    {
+                        inventory_current.Status = Status.settled;
+                        inventory_current.CalculateDate = DateTime.Now;
+                        commands.Add(inventory_current.ToUpdate());
+                    }
+                    var inventory_next = inventorys_next.FirstOrDefault(i => i.GoodsID == inventory_current.GoodsID);
+                    //只有不存在下月记录时插入记录
+                    if (inventory_next == null)
+                    {
+                        commands.Add(new Inventory
+                        {
+                            GoodsID = inventory_current.GoodsID,
+                            Price = inventory_current.Price,
+                            Weight = inventory_current.Weight,
+                            SettleMonth = nextmonth,
+                            CalculateDate = DateTime.Now,
+                            Status = Status.running
+                        }.ToInsert());
+                    }
+                }
+            }
             commands.Add(_operation_controller.GetOperationCommand(user, OperationController.Action.SettleInventory, "结算" + currentmonth + "库存"));
             try
             {
@@ -301,8 +321,8 @@ namespace WMS.Controllers
         /// <returns></returns>
         public bool Calculate(User user, ref string message)
         {
-            var currentmonth = timecontroller.GetRunningMonth();
-            var settlemonth = timecontroller.GetLastSettleMonth();
+            var currentmonth = TimeController.GetRunningMonth();
+            var settlemonth = TimeController.GetLastSettleMonth();
             var inventorys_runing = GetInventoryBySettleMonth(currentmonth);
             var inventorys_settle = GetInventoryBySettleMonth(settlemonth);
             var inventoryios = _inventoryio_controller.GetGoodsIOBySettleMonth(currentmonth);
@@ -570,13 +590,14 @@ namespace WMS.Controllers
 
         public bool InsertOrUpdate(Inventory goods_inventory, User user, ref string message)
         {
-            Model.Inventory goods_inventory_db = GetGoodsInventory(goods_inventory.GoodsID, goods_inventory.SettleMonth);
+            var goods_inventory_db = GetGoodsInventory(goods_inventory.GoodsID, goods_inventory.SettleMonth);
             if (goods_inventory_db == null)
             {
                 return this._insert(goods_inventory, user, ref message);
             }
             else
             {
+                goods_inventory.ID = goods_inventory_db.ID;
                 return this._update(goods_inventory, user, ref message);
             }
         }

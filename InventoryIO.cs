@@ -51,7 +51,6 @@ namespace WMS
 
         private Inventory_IO_Controller inventory_io_controller = new Inventory_IO_Controller();
         private InventoryController inventorycontroller = new InventoryController();
-        private TimeController timecontroller = new TimeController();
 
         private Inventory _getinventory(int goodsId)
         {
@@ -105,7 +104,7 @@ namespace WMS
                 this.cbx_GoodsName.Items.Add(goods.GoodsName);
             }
 
-            list_settleMonth = timecontroller.GetAllSettleMonth(true).ToList();
+            list_settleMonth = TimeController.GetAllSettleMonth(true).ToList();
         }
 
         private void InitDataGird()
@@ -308,7 +307,7 @@ namespace WMS
                 double price = 0;
                 double.TryParse(this.txt_Weight.Text, out weight);
                 double.TryParse(this.txt_Price.Text, out price);
-                if (weight * price != 0)
+                if (weight != 0)
                 {
                     if (weight > 0)
                         weight = -weight;
@@ -320,7 +319,7 @@ namespace WMS
                 }
                 else
                 {
-                    MessageBox.Show("数值不得为0");
+                    MessageBox.Show("重量不得为0");
                 }
             }
         }

@@ -5,16 +5,13 @@ using System.Text;
 using System.Data;
 using WMS.Helper;
 using WMS.Model;
+using WMS.Common;
 
 namespace WMS.Controllers
 {
     class UserController
     {
-        private SqliteHelper _sqlite_helper
-        {
-            get;
-            set;
-        }
+        private SqliteHelper _sqlite_helper => GlobalParam.DataBase;
 
         public UserController()
         {
@@ -23,7 +20,6 @@ namespace WMS.Controllers
 
         private void _initData()
         {
-            _sqlite_helper = new SqliteHelper();
         }
 
         private IEnumerable<User> _getusers(DataView dv)

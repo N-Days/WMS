@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace WMS.Util
+namespace WMS.Common
 {
     public struct ItemName_Chs
     {

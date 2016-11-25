@@ -28,7 +28,7 @@ namespace WMS
 
         private void OperationForm_Load(object sender, EventArgs e)
         {
-            var sqlite_helper = new SqliteHelper();
+            var sqlite_helper = Common.GlobalParam.DataBase;
             dg_Operation.DataSource = sqlite_helper.Query_DataView(new System.Data.SQLite.SQLiteCommand("select userName as 姓名,operation as 操作,content as 内容,operateDate as 操作时间 from user_operation,user where user_operation.userId=user.id"));
             SetFormPosition();
         }

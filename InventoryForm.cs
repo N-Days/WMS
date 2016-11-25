@@ -6,22 +6,25 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Data.SQLite;
 using WMS.Controllers;
 using System.Text.RegularExpressions;
 using WMS.Helper;
+using WMS.Model;
+using WMS.Common;
 
 namespace WMS
 {
     public partial class InventoryForm : Form
     {
-        public InventoryForm(Model.User currentuser)
+        public InventoryForm(User currentuser)
         {
             InitializeComponent();
-            this._currentuser = currentuser;
+            _currentuser = currentuser;
         }
 
-        private Model.User _currentuser = null;
-        private Model.Goods Goods = null;
+        private User _currentuser = null;
+        private Goods m_goods = null;
 
         private GoodsController goods_controller
         {
@@ -33,11 +36,7 @@ namespace WMS
             get;
             set;
         }
-        private SqliteHelper _sqlite_helper
-        {
-            get;
-            set;
-        }
+        private SqliteHelper _sqlite_helper => GlobalParam.DataBase;
 
         public void InitListView()
         {
@@ -48,6 +47,7 @@ namespace WMS
             {
                 ListViewItem lvi = new ListViewItem();
                 lvi.Text = goods.GoodsName.ToString();
+                lvi.Tag = goods;
                 if (goods.GoodsType.Equals(GoodsController.GoodsType.material))
                 {
                     this.lv_Material.Items.Add(lvi);
@@ -58,26 +58,28 @@ namespace WMS
                 }
             }
         }
+
         private void _initData()
         {
-            _sqlite_helper = new SqliteHelper();
             goods_controller = new GoodsController();
             inventory_controller = new InventoryController();
         }
+
         private void _autosetsplitterdistance()
         {
             splitContainer2.SplitterDistance = splitContainer2.Height / 10 * 4;
 
         }
+
         private void SetFormPosition()
         {
             Rectangle rec = SystemInformation.VirtualScreen;
             this.Location = new Point((rec.Width - this.Width) / 2, (rec.Height - this.Height) / 2);
         }
 
-        private void SetContent(string goodsName)
+        private void SetContent()
         {
-            var goods_inventory = inventory_controller.GetGoodsInventoryByGoodsName(goodsName, null);
+            var goods_inventory = inventory_controller.GetGoodsInventoryByGoodsName(m_goods.GoodsName, null);
             if (goods_inventory != null)
             {
                 this.txt_Price.Text = goods_inventory.Price.ToString();
@@ -89,11 +91,10 @@ namespace WMS
                 this.txt_Weight.Text = "0.0";
             }
 
-            this.Goods = goods_controller.GetGoodsByGoodsName(goodsName);
-            if (Goods != null)
+            if (m_goods != null)
             {
-                this.lab_GoodsName.Text = Goods.GoodsName;
-                this.lab_Color.Text = Goods.Color;
+                this.lab_GoodsName.Text = m_goods.GoodsName;
+                this.lab_Color.Text = m_goods.Color;
             }
             else
             {
@@ -104,18 +105,13 @@ namespace WMS
 
         private void _refreshdatagird()
         {
-            if (lv_Material.SelectedItems != null)
+            if (m_goods != null)
             {
-                this.dg_Inventory.DataSource = _sqlite_helper.Query_DataView("select goodsName as 名称,price as '价格(元/公斤)',weight as '重量(公斤)',settleMonth as 结算月份,calculateDate as 计算日期,status as 状态 from inventory,goods where goods.id=inventory.goodsId and goodsName=@GoodsName",
-                    new System.Data.SQLite.SQLiteParameter("@GoodsName", lv_Material.SelectedItems[0].Text));
-                if (lv_Intermediate.SelectedItems.Count != 0)
-                {
-                    SetContent(lv_Material.SelectedItems[0].Text);
-                }
-            }
-            else
-            {
-                MessageBox.Show("!");
+                dg_Inventory.DataSource = _sqlite_helper.Query_DataView("select goodsName as 名称,round(price,2) as '价格(元/公斤)',round(weight,2) as '重量(公斤)',settleMonth as 结算月份,calculateDate as 计算日期,status as 状态 from inventory,goods where goods.id=inventory.goodsId and goodsName=@GoodsName",
+                    new SQLiteParameter("@GoodsName", m_goods.GoodsName));
+                dg_Inventory.Sort(dg_Inventory.Columns[3], ListSortDirection.Descending);
+                var lastdate = $"{dg_Inventory[3, 0].Value.ToString()}-01 00:00:00";
+                date.MaxDate = Convert.ToDateTime(lastdate);
             }
         }
 
@@ -156,16 +152,25 @@ namespace WMS
 
         private void lv_Material_DoubleClick(object sender, EventArgs e)
         {
-            _refreshdatagird();
+            if (lv_Material.SelectedItems != null)
+            {
+                m_goods = (Goods)lv_Material.SelectedItems[0].Tag;
+                _refreshdatagird();
+                SetContent();
+            }
+            else
+            {
+                MessageBox.Show("!");
+            }
         }
 
         private void lv_Intermediate_DoubleClick(object sender, EventArgs e)
         {
             if (lv_Intermediate.SelectedItems != null)
             {
-                this.dg_Inventory.DataSource = _sqlite_helper.Query_DataView("select goodsName as 名称,price as '价格(元/公斤)',weight as '重量(公斤)',settleMonth as 结算月份,calculateDate as 计算日期,status as 状态 from inventory,goods where goods.id=inventory.goodsId and goodsName=@GoodsName",
-                    new System.Data.SQLite.SQLiteParameter("@GoodsName", lv_Intermediate.SelectedItems[0].Text));
-                SetContent(lv_Intermediate.SelectedItems[0].Text);
+                m_goods = (Goods)lv_Intermediate.SelectedItems[0].Tag;
+                _refreshdatagird();
+                SetContent();
             }
             else
             {
@@ -177,26 +182,31 @@ namespace WMS
         {
             if (CheckContent())
             {
-                if (Goods != null)
+                if (m_goods != null)
                 {
-                    Model.Inventory goods_inventory = new Model.Inventory();
-                    goods_inventory.GoodsID = Goods.ID;
+                    var goods_inventory = new Inventory();
+                    goods_inventory.GoodsID = m_goods.ID;
                     goods_inventory.Price = Convert.ToDouble(txt_Price.Text);
                     goods_inventory.Weight = Convert.ToDouble(txt_Weight.Text);
                     goods_inventory.SettleMonth = date.Text;
                     goods_inventory.CalculateDate = DateTime.Now;
                     goods_inventory.Status = InventoryController.Status.locked;
-                    InventoryController inventory_controller = new InventoryController();
+
                     string message = "";
                     if (inventory_controller.InsertOrUpdate(goods_inventory, this._currentuser, ref message))
                     {
                         _refreshdatagird();
+                        MessageBox.Show("锁定完成");
                     }
                     else
                     {
                         MessageBox.Show("新增库存记录失败!\r\n" + message);
                     }
                 }
+            }
+            else
+            {
+                MessageBox.Show("未通过内容检查");
             }
         }
 

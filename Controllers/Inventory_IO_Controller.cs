@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Data;
 using WMS.Helper;
+using WMS.Common;
 using WMS.Model;
 using System.Data.SQLite;
 
@@ -11,11 +12,7 @@ namespace WMS.Controllers
 {
     class Inventory_IO_Controller
     {
-        private SqliteHelper _sqlite_helper
-        {
-            get;
-            set;
-        }
+        private SqliteHelper _sqlite_helper => GlobalParam.DataBase;
         private OperationController _operation_controller
         {
             get;
@@ -28,7 +25,6 @@ namespace WMS.Controllers
 
         private void _initData()
         {
-            _sqlite_helper = new SqliteHelper();
             _operation_controller = new OperationController();
         }
 
@@ -43,6 +39,7 @@ namespace WMS.Controllers
                     Price = Convert.ToDouble(drv["price"].ToString()),
                     Weight = Convert.ToDouble(drv["weight"].ToString()),
                     RecordDate = Convert.ToDateTime(drv["recordDate"].ToString()),
+                    SettleMonth=drv["settleMonth"].ToString(),
                     UserID = Convert.ToInt32(drv["userid"].ToString())
                 };
             }

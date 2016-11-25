@@ -14,16 +14,11 @@ namespace WMS
 {
     public partial class fLogin : Form
     {
-        private SqliteHelper _sqlite_helper
-        {
-            get;
-            set;
-        }
         private UserController _user_controller
         {
             get; set;
         }
-        public Model.User CurrentUser = null;
+        public User CurrentUser = null;
 
         public fLogin()
         {
@@ -33,7 +28,6 @@ namespace WMS
 
         private void _initData()
         {
-            _sqlite_helper = new SqliteHelper();
             _user_controller = new UserController();
         }
 

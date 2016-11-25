@@ -56,11 +56,8 @@ namespace WMS.Helper
             var command = new SQLiteCommand(sql)
             {
                 Connection = s_sqliteconnection,
-                Parameters =
-                {
-                    parameters
-                }
             };
+            command.Parameters.AddRange(parameters);
             return command;
         }
 
@@ -153,18 +150,17 @@ namespace WMS.Helper
 
         public int Execute(String sql, SQLiteParameter[] parameters)
         {
-            using (var command = _getcommand(sql, parameters))
-            {
-                return Execute(command);
-            }
+            return Execute(_getcommand(sql, parameters));
         }
 
         public int Execute(String sql, SQLiteParameter parameter)
         {
-            using (var command = _getcommand(sql, parameter))
-            {
-                return Execute(command);
-            }
+            return Execute(_getcommand(sql, parameter));
+        }
+
+        public int Execute(String sql)
+        {
+            return Execute(new SQLiteCommand(sql));
         }
 
         public DataSet Query_DataSet(SQLiteCommand command)
@@ -193,18 +189,17 @@ namespace WMS.Helper
 
         public DataView Query_DataView(String sql, SQLiteParameter[] parameters)
         {
-            using (var command = _getcommand(sql, parameters))
-            {
-                return Query_DataView(command);
-            }
+            return Query_DataView(_getcommand(sql, parameters));
         }
 
         public DataView Query_DataView(String sql, SQLiteParameter parameter)
         {
-            using (var command = _getcommand(sql, parameter))
-            {
-                return Query_DataView(command);
-            }
+            return Query_DataView(_getcommand(sql, parameter));
+        }
+
+        public DataView Query_DataView(String sql)
+        {
+            return Query_DataView(new SQLiteCommand(sql));
         }
     }
 }

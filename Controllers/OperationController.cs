@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using WMS.Helper;
+using WMS.Common;
 using WMS.Model;
 using System.Data.SQLite;
 
@@ -11,24 +12,14 @@ namespace WMS.Controllers
     class OperationController
     {
         private const String c_insert = "insert into user_operation values(null,@UserID,@Operation,@Content,@OperaDate)";
-        private SqliteHelper _sqlite_helper
-        {
-            get;
-            set;
-        }
+
         public OperationController()
         {
-            _initData();
-        }
-
-        private void _initData()
-        {
-            _sqlite_helper = new SqliteHelper();
         }
 
         public void RecordOperation(User currentuser, string action, string content)
         {
-            _sqlite_helper.Execute(GetOperationCommand(currentuser, action, content));
+            GlobalParam.DataBase.Execute(GetOperationCommand(currentuser, action, content));
         }
 
         public SQLiteCommand GetOperationCommand(User currentuser, string action, string content)

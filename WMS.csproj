@@ -166,10 +166,7 @@
     <Compile Include="UserManage.Designer.cs">
       <DependentUpon>UserManage.cs</DependentUpon>
     </Compile>
-    <Compile Include="Util\Control.cs" />
-    <Compile Include="Util\DB.cs" />
-    <Compile Include="Util\Hook.cs" />
-    <Compile Include="Util\ItemName_Chs.cs" />
+    <Compile Include="Common\ItemName_Chs.cs" />
     <EmbeddedResource Include="ChoiceSettleMonth.resx">
       <DependentUpon>ChoiceSettleMonth.cs</DependentUpon>
     </EmbeddedResource>
